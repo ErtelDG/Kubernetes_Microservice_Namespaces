@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: application-controller
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpcnsservice 
+  namespace: application-controller
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: grpc-ns-service 
+  template:
+    metadata:
+      labels:
+        app: grpc-ns-service 
+    spec:
+      serviceAccountName: application-controller-account
+      containers:
+        - name: grpc-ns-service 
+          image: erteldg/grpcnamespaceservice:latest
+          ports:
+            - name: grpc-ns-service  
+              containerPort: 50051
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grpcnsservice 
+  namespace: application-controller
+spec:
+  selector:
+    app: grpc-ns-service 
+  ports:
+    - name: grpc-ns-service  
+      port: 50051
+      targetPort: grpc-ns-service
+  type: NodePort
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: application-controller-account
+  namespace: application-controller
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: namespace-manager
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list", "watch", "create", "delete"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: namespace-manager-binding
+subjects:
+- kind: ServiceAccount
+  name: application-controller-account
+  namespace: application-controller
+roleRef:
+  kind: ClusterRole
+  name: namespace-manager
+  apiGroup: rbac.authorization.k8s.io

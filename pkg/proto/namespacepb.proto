@@ -1,0 +1,24 @@
+// namespace.proto
+syntax = "proto3";
+
+package namespacepb;
+
+option go_package = "github.com/erteldg/pkg/grpcnamespaceservice/proto";
+
+service NamespaceService {
+	rpc CreateNamespace(NamespaceRequest) returns (NamespaceReply) {}
+	rpc DeleteNamespace(NamespaceRequest) returns (NamespaceReply) {}
+	rpc ListNamespaces(NamespaceRequest) returns (NamespaceListReply) {}
+}
+
+message NamespaceRequest {
+	string name = 1;
+}
+
+message NamespaceReply {
+	string message = 1;
+}
+
+message NamespaceListReply {
+	repeated string namespaces = 1;
+}
